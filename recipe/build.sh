@@ -39,7 +39,7 @@ cmake \
 make -j${CPU_COUNT}
 
 if [[ $(uname) == "Darwin" ]]; then
-  ctest --output-on-failure
+  DYLD_FORCE_FLAT_NAMESPACE=1 ctest --output-on-failure
 else
   # Ref: https://github.com/Reference-LAPACK/lapack/issues/85
   ulimit -s unlimited
