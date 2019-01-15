@@ -18,9 +18,14 @@ if [[ $(uname) == "Darwin" ]]; then
     export CFLAGS="${CFLAGS} -isysroot ${CONDA_BUILD_SYSROOT}"
     export FFLAGS="${FFLAGS} -isysroot ${CONDA_BUILD_SYSROOT}"
     export LDFLAGS=$(echo "${LDFLAGS}" | sed "s/-Wl,-dead_strip_dylibs//g")
+
+    # Allow overriding xerbla by oter libraries or executables.
+    echo xerbla_ >> interposable.list
+    export LDFLAGS="${LDFLAGS} -Wl,-interposable_list,`pwd`/interposable.list"
 fi
 
 # CMAKE_INSTALL_LIBDIR="lib" suppresses CentOS default of lib64 (conda expects lib)
+
 
 cmake \
   -DCMAKE_INSTALL_PREFIX=${PREFIX} \
@@ -34,12 +39,7 @@ cmake \
 make -j${CPU_COUNT}
 
 if [[ $(uname) == "Darwin" ]]; then
-  # testing with shared libraries does not work. skip them
-  # to test that program exits if wrong parameters are given, what the testsuite
-  # do is that the symbol xerbla (xerbla logs the error and exits) is overriden
-  # by the test program's own version which reports to the test program that
-  # xerbla was called. This does not work with dylibs on osx and dlls on windows
-  ctest --output-on-failure -E "x*cblat2|x*cblat3"
+  ctest --output-on-failure
 else
   # Ref: https://github.com/Reference-LAPACK/lapack/issues/85
   ulimit -s unlimited
